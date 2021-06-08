@@ -20,13 +20,7 @@ import java.util.List;
 
 public class NodeIntersectionRenderer extends IntersectionRenderer {
 
-    // <editor-fold defaultstate="collapsed" desc="Variables"
-
     private Node _node;
-
-    // </editor-fold>
-
-    // <editor-fold defaultstate="collapsed" desc="Constructors">
 
     public NodeIntersectionRenderer(Node n, MapView mv, LaneMappingMode m) {
         super(mv, m);
@@ -34,8 +28,6 @@ public class NodeIntersectionRenderer extends IntersectionRenderer {
         _trimWays = false; // Only multi intersections do this.
         createIntersectionLayout();
     }
-
-    // </editor-fold>
 
     @Override
     public List<WayVector> waysClockwiseOrder() {
