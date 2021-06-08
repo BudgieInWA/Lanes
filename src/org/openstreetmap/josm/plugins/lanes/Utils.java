@@ -38,8 +38,8 @@ public class Utils {
     public final static double RENDERING_WIDTH_DIVIDER = 0.6;
     public final static double WIDTH_INVALID_METERS = 5.0;
 
-    public final static double DIST_BETWEEN_TURNS = 24.0; // Distance in meters between turn arrows on rendered lanes.
-    public final static double DIST_TO_FIRST_TURN = 13.5; // Distance in meters to first turn arrow on rendered lanes.
+    public final static double DIST_BETWEEN_TURNS = 20.0; // Distance in meters between turn arrows on rendered lanes.
+    public final static double DIST_TO_FIRST_TURN = 9.0; // Distance in meters to first turn arrow on rendered lanes.
 
     public final static Color DEFAULT_ASPHALT_COLOR = new Color(40, 40, 50, 170);
     public final static Color POPUP_ASPHALT_COLOR = new Color(35, 35, 45);
