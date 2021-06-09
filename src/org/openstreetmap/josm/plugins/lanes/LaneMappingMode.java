@@ -338,7 +338,8 @@ public class LaneMappingMode extends MapMode implements MouseListener, MouseMoti
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
         for (List<NodeIntersectionRenderer> group : multiNodeCollections) {
             if (group != null) {
-                executor.execute(() -> {
+                if (group.size() == 1) out.add(group.get(0));
+                else executor.execute(() -> {
                     try {
                         new MultiIntersectionRenderer(group, out);
                     } catch (Exception ignored) {}
@@ -351,7 +352,10 @@ public class LaneMappingMode extends MapMode implements MouseListener, MouseMoti
 
         nodeIdToISR = new HashMap<>();
 
-        for (IntersectionRenderer m : out) for (long l : ((MultiIntersectionRenderer) m).getNodeIntersections()) nodeIdToISR.put(l, m);
+        for (IntersectionRenderer r : out) {
+            if (r instanceof MultiIntersectionRenderer) for (long l : ((MultiIntersectionRenderer) r).getNodeIntersections()) nodeIdToISR.put(l, r);
+            if (r instanceof NodeIntersectionRenderer) nodeIdToISR.put(((NodeIntersectionRenderer) r).getNode().getUniqueId(), r);
+        }
 
         return out;
     }
