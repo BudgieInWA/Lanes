@@ -238,7 +238,9 @@ public class MarkedRoadRenderer extends RoadRenderer {
             JOptionPane.showMessageDialog(MainApplication.getMainFrame(), "End is NaN");
         }
         double placementDiff = getPlacementAt(false, true) - getPlacementAt(true, true);
-        _alignment = Utils.getParallel(_way, 0, placementDiff, true, otherStartAngle, otherEndAngle);
+        double extraFirstNodeOffset = getIntersectionPlacementOffset(true);
+        double extraLastNodeOffset = getIntersectionPlacementOffset(false);
+        _alignment = Utils.getParallel(_way, 0, placementDiff, true, otherStartAngle, otherEndAngle, extraFirstNodeOffset, extraLastNodeOffset);
         _offsetToLeftEnd -= placementDiff;
     }
 

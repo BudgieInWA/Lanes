@@ -175,7 +175,25 @@ public abstract class RoadRenderer {
         }
         if (connectionsThisWay != 1) somethingIsNotValid = true;
 
-        // Ensure that there is only one other way, and that the node shows up only once in that way.
+        IntersectionRenderer intersection = _parent.nodeIdToISR.getOrDefault(pivot.getUniqueId(), null);
+        if (intersection != null) {
+            OneWayLaneSplit connectivity = intersection.getConnectivity();
+            if (connectivity instanceof OneWayLaneSplit && connectivity.joiningWayToLeftmostLane.containsKey(_way.getUniqueId())) {
+                otherWay = connectivity.mainRoad;
+                try {
+                    // Double the angle of deflection because otherWay wont move.
+                    Node secondToLast = otherWayStartsHere ? otherWay.getNode(1) : otherWay.getNode(otherWay.getNodesCount() - 2);
+                    Node last = otherWayStartsHere ? otherWay.getNode(0) : otherWay.getNode(otherWay.getNodesCount() - 1);
+                    double thisAngle = (getThisAngle(start) + Math.PI) % (2*Math.PI);
+                    double otherAngle = last.getCoor().bearing(secondToLast.getCoor());
+                    double diff = otherAngle - thisAngle;
+                    if (Math.abs(diff) > Math.PI) diff -= 2*Math.PI;
+                    return otherAngle + diff;
+                } catch (NullPointerException ignored) {}
+            }
+        }
+
+        // Search for a single other way that contains the node only once.
         for (Way w : pivot.getParentWays()) {
             if (w.getUniqueId() == _way.getUniqueId() || !_parent.wayIdToRSR.containsKey(w.getUniqueId())) continue;
             otherWay = _parent.wayIdToRSR.get(w.getUniqueId()).getAlignment();

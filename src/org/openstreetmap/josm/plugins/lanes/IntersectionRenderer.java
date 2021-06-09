@@ -356,6 +356,20 @@ public abstract class IntersectionRenderer {
 
     public void render(Graphics2D g) {
         try {
+
+            // Draw OneWayLaneSplit
+            if (_connectivity != null) {
+//                g.setStroke(new BasicStroke(10));
+//                g.setColor(Color.RED);
+//                Node n = _connectivity.mainRoad.getNode(_connectivity.fork ? _connectivity.mainRoad.getNodesCount() - 1 : 0);
+//                int x = (int) (_mv.getPoint(n.getCoor()).getX() + 0.5);
+//                int y = (int) (_mv.getPoint(n.getCoor()).getY() + 0.5);
+//                g.drawLine(x, y, x, y);
+//                g.setColor(new Color(0, 0, 0, 0));
+//                g.setStroke(GuiHelper.getCustomizedStroke("0"));
+                return;
+            }
+
             // Fill in asphalt.
             int[] xPoints = new int[_outline.getNodesCount()];
             int[] yPoints = new int[_outline.getNodesCount()];
