@@ -113,6 +113,10 @@ public class Utils {
     // <editor-fold defaultstate="collapsed" desc="Methods for Finding Parallel Ways">
 
     public static Way getParallel(Way way, double offsetStart, double offsetEnd, boolean useAngleOffset, double angStart, double angEnd) {
+        return getParallel(way, offsetStart, offsetEnd, useAngleOffset, angStart, angEnd, 0, 0);
+    }
+
+    public static Way getParallel(Way way, double offsetStart, double offsetEnd, boolean useAngleOffset, double angStart, double angEnd, double offsetFirst, double offsetLast) {
         LatLon[] points = new LatLon[way.getNodesCount()];
         double[] distanceIntoWay = new double[way.getNodesCount()];
         double distanceOfWay = 0;
@@ -153,7 +157,7 @@ public class Utils {
             }
         }
 
-        output[0] = getLatLonRelative(points[0], angleToUse, offsetStart*multiplierToUse);
+        output[0] = getLatLonRelative(points[0], angleToUse, (offsetStart + offsetFirst)*multiplierToUse);
 
         // Deal with all other nodes
         for (int i = 1; i < points.length - 1; i++) {
@@ -194,7 +198,7 @@ public class Utils {
             }
         }
 
-        output[points.length - 1] = getLatLonRelative(points[points.length - 1], angleToUse, offsetEnd*multiplierToUse);
+        output[points.length - 1] = getLatLonRelative(points[points.length - 1], angleToUse, (offsetEnd + offsetLast)*multiplierToUse);
 
 
 
