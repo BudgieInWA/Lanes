@@ -29,6 +29,8 @@ public abstract class IntersectionRenderer {
     protected List<Way> _leftBackbones;
     protected List<Way> _crossSections;
 
+    protected OneWayLaneSplit _connectivity; // Only one typ of connectivity supported so far.
+
     protected List<WayVector> _toBeTrimmed;
     protected boolean _trimWays;
     protected List<LatLon> _rightPoints;
@@ -470,6 +472,10 @@ public abstract class IntersectionRenderer {
 
     abstract LatLon getPos();
 
+    public OneWayLaneSplit getConnectivity() {
+        return _connectivity;
+    }
+
     public Way glue(Way a, Way b, double extension) {
         // Glue first half of a to second half of b.  Split into halves at intersect.
         double[] distances = new double[2];
@@ -586,4 +592,21 @@ class IntersectionGraphSegment {
     }
 
     public List<WayVector> wayVectors() { return _connection; }
+}
+
+/**
+ * Represents simple lane-splitting connections, where the number of lanes remains constant but the lanes
+ * physically separate from each other.
+ */
+class OneWayLaneSplit {
+    /** The road that determines the position of the other lanes. */
+    public final Way mainRoad;
+    public final boolean fork;
+    /** Indicates which lane in mainRoad connects to lane 1 in the joining way. */
+    public final Map<Long, Integer> joiningWayToLeftmostLane = new HashMap<>();
+
+    public OneWayLaneSplit(Way mainRoad, boolean fork) {
+        this.mainRoad = mainRoad;
+        this.fork = fork;
+    }
 }

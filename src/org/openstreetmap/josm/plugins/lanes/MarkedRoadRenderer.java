@@ -224,6 +224,12 @@ public class MarkedRoadRenderer extends RoadRenderer {
         return numLanes;
     }
 
+    public int getLaneCount(int direction) {
+        if (direction > 0) return _forwardLanes.size();
+        if (direction < 0) return _backwardLanes.size();
+        return _bothWaysLane instanceof Lane ? 1 : 0;
+    }
+
 
     private void getPlacementInformation() {
         _offsetToLeftStart = getPlacementAt(true, false);
