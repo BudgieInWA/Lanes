@@ -106,14 +106,14 @@ class OneWayLaneDivergence extends NodeConnectivity {
     }
 
     public void addDivergingWay(Way way, int leftmostLane) {
-        divergingWayIdToLeftmostLane.put(way.getUniqueId(), new LaneRef(way, 1, leftmostLane));
+        divergingWayIdToLeftmostLane.put(way.getUniqueId(), new LaneRef(mainRoad, 1, leftmostLane));
     }
 
     @Override
     public List<LaneRef> getConnections(LaneRef laneRef) {
         if (laneRef.way.equals(mainRoad)) throw new UnsupportedOperationException("Not yet implemented");
         LaneRef l = divergingWayIdToLeftmostLane.get(laneRef.way.getUniqueId());
-        return Collections.singletonList(l.withLane(laneRef.lane - 1));
+        return Collections.singletonList(l.withLane(l.lane + laneRef.lane - 1));
     }
 }
 
