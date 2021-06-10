@@ -10,7 +10,9 @@ import org.openstreetmap.josm.gui.util.GuiHelper;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class IntersectionRenderer {
     protected MapView _mv;
