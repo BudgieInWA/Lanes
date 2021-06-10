@@ -21,11 +21,13 @@ import java.util.List;
 public class NodeIntersectionRenderer extends IntersectionRenderer {
 
     private Node _node;
+    protected NodeConnectivity _connectivity;
 
     public NodeIntersectionRenderer(Node n, MapView mv, LaneMappingMode m) {
         super(mv, m);
         _node = n;
         _trimWays = false; // Only multi intersections do this.
+        _connectivity = NodeConnectivity.create(n, m);
         createIntersectionLayout();
     }
 
@@ -44,6 +46,11 @@ public class NodeIntersectionRenderer extends IntersectionRenderer {
     @Override
     public LatLon getPos() {
         return _node.getCoor();
+    }
+
+    @Override
+    public Connectivity getConnectivity() {
+        return _connectivity;
     }
 
     public Way getOutline() {

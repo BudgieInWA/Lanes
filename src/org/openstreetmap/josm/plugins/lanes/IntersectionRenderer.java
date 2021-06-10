@@ -405,6 +405,26 @@ public abstract class IntersectionRenderer {
 //            g.drawPolyline(xPoints2, yPoints2, xPoints2.length);
 //        }
 
+
+            // DRAW CONNECTIVITY
+            Connectivity con = getConnectivity();
+            if (con instanceof OneWayLaneDivergence) {
+                g.setStroke(new BasicStroke(5));
+                OneWayLaneDivergence div = (OneWayLaneDivergence) con;
+                int fromX = (int) (_mv.getPoint(div._node).getX() + 0.5);
+                int fromY = (int) (_mv.getPoint(div._node).getY() + 0.5);
+                for (LaneRef ref: div.divergingWayIdToLeftmostLane.values()) {
+                    Node toNode = ref.way.getNode(div.isFork ? 1 : ref.way.getNodesCount() - 2);
+                    int toX = (int) (_mv.getPoint(toNode).getX() + 0.5);
+                    int toY = (int) (_mv.getPoint(toNode).getY() + 0.5);
+                    g.setColor(Color.GREEN);
+                    g.drawLine(fromX, fromY, toX, toY);
+                    g.setColor(Color.CYAN);
+                    g.drawString("1:" + ref.lane, toX + 10, toY + 10);
+                }
+            }
+
+
         g.setStroke(new BasicStroke(10));
         g.setColor(Color.RED);
         for (int i = 0; i < _bruh.size(); i++) {
@@ -469,6 +489,8 @@ public abstract class IntersectionRenderer {
     abstract List<List<IntersectionGraphSegment>> getPerimeter();
 
     abstract LatLon getPos();
+
+    abstract Connectivity getConnectivity();
 
     public Way glue(Way a, Way b, double extension) {
         // Glue first half of a to second half of b.  Split into halves at intersect.

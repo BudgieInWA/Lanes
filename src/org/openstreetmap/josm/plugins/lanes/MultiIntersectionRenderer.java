@@ -20,13 +20,19 @@ public class MultiIntersectionRenderer extends IntersectionRenderer {
     private List<NodeIntersectionRenderer> _space;
     private List<Long> _nodeIds;
     private LatLon _pos;
-
+    private Connectivity _connectivity;
 
     public MultiIntersectionRenderer(List<NodeIntersectionRenderer> nodeOnlyIntersections, List<IntersectionRenderer> addToThis) {
         super(nodeOnlyIntersections.get(0)._mv, nodeOnlyIntersections.get(0)._m);
         // Fixme remove
         _ordering = new ArrayList<>();
         _vertextOrdering = new ArrayList<>();
+
+        if (nodeOnlyIntersections.size() == 1) {
+            _connectivity = nodeOnlyIntersections.get(0).getConnectivity();
+        } else {
+            // TODO combine connectivities.
+        }
 
         _internalGraph = new ArrayList<>();
         _wayVectors = new ArrayList<>();
@@ -188,6 +194,11 @@ public class MultiIntersectionRenderer extends IntersectionRenderer {
     @Override
     public LatLon getPos() {
         return _pos;
+    }
+
+    @Override
+    Connectivity getConnectivity() {
+        return _connectivity;
     }
 
     public List<NodeIntersectionRenderer> getNodeOnlyIntersections() {

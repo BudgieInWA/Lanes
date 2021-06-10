@@ -432,6 +432,8 @@ public class LaneMappingMode extends MapMode implements MouseListener, MouseMoti
             replacementRR.updateAlignment();
         }
 
+        // TODO update connectivity on connected intersections.
+
         // Find all nearby intersections and prepare to update them.
         List<IntersectionRenderer> intersectionsToUpdate = new ArrayList<>();
         List<RoadRenderer> roadsToUpdate = new ArrayList<>();
