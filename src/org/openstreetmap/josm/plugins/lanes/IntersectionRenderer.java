@@ -6,6 +6,7 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.util.GuiHelper;
+import org.openstreetmap.josm.tools.Pair;
 
 import javax.swing.*;
 import java.awt.*;
@@ -408,30 +409,37 @@ public abstract class IntersectionRenderer {
 
             // DRAW CONNECTIVITY
             Connectivity con = getConnectivity();
-            if (con instanceof OneWayLaneDivergence) {
+            if (con instanceof RoadSplit) {
                 try {
-                    g.setStroke(new BasicStroke(5));
-                    OneWayLaneDivergence div = (OneWayLaneDivergence) con;
+                    RoadSplit div = (RoadSplit) con;
+                    int x = (int) (_mv.getPoint(div._node).getX() + 0.5);
+                    int y = (int) (_mv.getPoint(div._node).getY() + 0.5);
+                    g.setStroke(new BasicStroke(10));
+                    g.setColor(Color.GREEN);
+                    g.drawLine(x, y, x, y);
+
                     double offsetAngle = _m.wayIdToRSR.get(div.mainRoad.getUniqueId()).getThisAngle(!div.isFork);
                     offsetAngle += (div.isFork ? 1 : -1) * Math.PI / 2;
-                    for (long wayId: div.divergingWayIdToLeftmostLane.keySet()) {
-                        RoadRenderer rr = _m.wayIdToRSR.get(wayId);
-                        LaneRef ref = div.divergingWayIdToLeftmostLane.get(wayId);
+
+                    for (Pair<LaneRef, LaneRef> mainToDiverging: div.connections) {
+                        LaneRef mainRoadLaneRef = mainToDiverging.a;
+                        RoadRenderer oppositeRoad = _m.wayIdToRSR.get(mainToDiverging.b.way.getUniqueId());
 
                         double offset = 0.0;
-                        if (rr instanceof MarkedRoadRenderer) {
-                            offset = ((MarkedRoadRenderer) rr).getConnectivityPlacementOffset(div.isFork);
+                        if (oppositeRoad instanceof MarkedRoadRenderer) {
+                            offset = ((MarkedRoadRenderer) oppositeRoad).getConnectivityPlacementOffset(div.isFork);
                         }
                         Point from = _mv.getPoint(Utils.getLatLonRelative(div._node.getCoor(), offsetAngle, offset));
 
-                        Node toNode = rr._way.getNode(div.isFork ? 1 : rr._way.getNodesCount() - 2);
+                        Node toNode = oppositeRoad._way.getNode(div.isFork ? 1 : oppositeRoad._way.getNodesCount() - 2);
                         int toX = (int) (_mv.getPoint(toNode).getX() + 0.5);
                         int toY = (int) (_mv.getPoint(toNode).getY() + 0.5);
 
+                        g.setStroke(new BasicStroke(5));
                         g.setColor(Color.GREEN);
                         g.drawLine((int) (from.getX() + 0.5), (int) (from.getY() + 0.5), toX, toY);
                         g.setColor(Color.CYAN);
-                        g.drawString("1:" + ref.lane, toX + 10, toY + 10);
+                        g.drawString(mainToDiverging.b.lane + ":" + mainRoadLaneRef.lane, toX + 10, toY + 10);
                     }
                 } catch (Exception ignored) {}
             }

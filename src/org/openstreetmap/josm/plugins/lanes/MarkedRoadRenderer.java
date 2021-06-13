@@ -257,8 +257,7 @@ public class MarkedRoadRenderer extends RoadRenderer {
         if (intersection == null) return 0;
 
         try {
-            // Try for a one-way road forking/joining.
-            OneWayLaneDivergence connectivity = (OneWayLaneDivergence) intersection.getConnectivity();
+            RoadSplit connectivity = (RoadSplit) intersection.getConnectivity();
 
             String placement = getPlacementTag(start);
             if (placement == null) {
@@ -266,11 +265,11 @@ public class MarkedRoadRenderer extends RoadRenderer {
                 placement = (lanes % 2 == 1) ? "middle_of:" + (lanes / 2 + 1) + "f" : "right_of:" + (lanes / 2) + "f";
             }
             String[] placementBits = placement.substring(0, placement.length() - 1).split(":");
-            LaneRef placementLane = new LaneRef(_way, 1, Integer.parseInt(placementBits[1]));
+            LaneRef placementLane = new LaneRef(_way, 1, 1);
 
             LaneRef other = connectivity.getConnections(placementLane).get(0);
             MarkedRoadRenderer otherRoad = (MarkedRoadRenderer) _parent.wayIdToRSR.get(other.way.getUniqueId());
-            String otherPlacement = placementBits[0] + ":" + (other.lane) + "f";
+            String otherPlacement = placementBits[0] + ":" + (other.lane + Integer.parseInt(placementBits[1]) - 1) + "f";
             return otherRoad.getPlacementAt(!start, false) - otherRoad.getPlacementDistance(!start, otherPlacement, false);
         } catch (Exception ignored) {}
 
