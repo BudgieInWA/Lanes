@@ -418,28 +418,31 @@ public abstract class IntersectionRenderer {
                     g.setColor(Color.GREEN);
                     g.drawLine(x, y, x, y);
 
-                    double offsetAngle = _m.wayIdToRSR.get(div.mainRoad.getUniqueId()).getThisAngle(!div.isFork);
-                    offsetAngle += (div.isFork ? 1 : -1) * Math.PI / 2;
+                    double offsetAngle = _m.wayIdToRSR.get(div.mainRoad.getParent().getUniqueId()).getThisAngle(!div.mainRoad.isForward());
+                    offsetAngle += (div.mainRoad.isForward() ? 1 : -1) * Math.PI / 2;
 
-                    for (Pair<LaneRef, LaneRef> mainToDiverging: div.connections) {
-                        LaneRef mainRoadLaneRef = mainToDiverging.a;
-                        RoadRenderer oppositeRoad = _m.wayIdToRSR.get(mainToDiverging.b.way.getUniqueId());
+                    for (LaneRef connectedLane: div.innerLaneToConnectedLane.values()) {
+                        LaneRef mainRoadLaneRef = div.getConnections(connectedLane).get(0);
+                        RoadRenderer connectedRoad = _m.wayIdToRSR.get(connectedLane.wayVec.getParent().getUniqueId());
 
                         double offset = 0.0;
-                        if (oppositeRoad instanceof MarkedRoadRenderer) {
-                            offset = ((MarkedRoadRenderer) oppositeRoad).getConnectivityPlacementOffset(div.isFork);
+                        if (connectedRoad instanceof MarkedRoadRenderer) {
+                            offset = div.getPlacementOffset(connectedLane.wayVec, _m);
                         }
                         Point from = _mv.getPoint(Utils.getLatLonRelative(div._node.getCoor(), offsetAngle, offset));
+                        int fromX = (int) (from.getX() + 0.5);
+                        int fromY = (int) (from.getY() + 0.5);
 
-                        Node toNode = oppositeRoad._way.getNode(div.isFork ? 1 : oppositeRoad._way.getNodesCount() - 2);
+                        Node toNode = connectedRoad._way.getNode(connectedLane.wayVec.getFrom() + (connectedLane.wayVec.isForward() ? 1 : - 1));
                         int toX = (int) (_mv.getPoint(toNode).getX() + 0.5);
                         int toY = (int) (_mv.getPoint(toNode).getY() + 0.5);
 
                         g.setStroke(new BasicStroke(5));
                         g.setColor(Color.GREEN);
-                        g.drawLine((int) (from.getX() + 0.5), (int) (from.getY() + 0.5), toX, toY);
+                        g.drawLine(fromX, fromY, toX, toY);
                         g.setColor(Color.CYAN);
-                        g.drawString(mainToDiverging.b.lane + ":" + mainRoadLaneRef.lane, toX + 10, toY + 10);
+                        g.drawString((mainRoadLaneRef.directedLane >= 0 ? "+" : "") + mainRoadLaneRef.directedLane, fromX + 10, fromY + 10);
+                        g.drawString((connectedLane.directedLane >= 0 ? "+" : "") + connectedLane.directedLane, toX + 10, toY + 10);
                     }
                 } catch (Exception ignored) {}
             }

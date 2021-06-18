@@ -11,6 +11,7 @@ import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.util.GuiHelper;
+import org.openstreetmap.josm.tools.Pair;
 
 import javax.swing.*;
 import java.awt.*;
@@ -241,44 +242,15 @@ public class MarkedRoadRenderer extends RoadRenderer {
         _offsetToLeftEnd -= placementDiff;
     }
 
-    /**
-     * Calculates the placement offset distance for the end of this road based on the connectivity to - and placement of -
-     * another road. This is how far the node would want to move to be correctly positioned for this way (given its placement).
-     *
-     * When a road splits with its lanes diverging, the shared node may lay outside of the lanes represented by this
-     * Road. For this reason, we calculate this offset based on the placement and widths of the lane we are connected to.
-     *
-     * If this way has placement=transition, this value should be treated as transition:start (or :end). Otherwise only the
-     * first segment (or thereabouts) should be offset (like the common case of a single lane breaking away from a multi lane road).
-     */
-    public double getConnectivityPlacementOffset(boolean start) {
-        Node pivot = _way.getNode(start ? 0 : _way.getNodesCount()-1);
-        IntersectionRenderer intersection = _parent.nodeIdToISR.getOrDefault(pivot.getUniqueId(), null);
-        if (intersection == null) return 0;
-
-        try {
-            RoadSplit connectivity = (RoadSplit) intersection.getConnectivity();
-
-            String placement = getPlacementTag(start);
-            if (placement == null) {
-                int lanes = getLaneCount(1);
-                placement = (lanes % 2 == 1) ? "middle_of:" + (lanes / 2 + 1) + "f" : "right_of:" + (lanes / 2) + "f";
-            }
-            String[] placementBits = placement.substring(0, placement.length() - 1).split(":");
-            LaneRef placementLane = new LaneRef(_way, 1, 1);
-
-            LaneRef other = connectivity.getConnections(placementLane).get(0);
-            MarkedRoadRenderer otherRoad = (MarkedRoadRenderer) _parent.wayIdToRSR.get(other.way.getUniqueId());
-            String otherPlacement = placementBits[0] + ":" + (other.lane + Integer.parseInt(placementBits[1]) - 1) + "f";
-            return otherRoad.getPlacementAt(!start, false) - otherRoad.getPlacementDistance(!start, otherPlacement, false);
-        } catch (Exception ignored) {}
-
-        // TODO extend to LaneMerges too.
-        return 0;
-    }
 
     private double getPlacementAt(boolean start, boolean ignoreWidthTags) {
         return getPlacementDistance(start, getPlacementTag(start), ignoreWidthTags);
+    }
+
+    /** Calculates the offset from this road's way to the position specified by otherPlacement. */
+    public double getPlacementOffsetFrom(String otherPlacement, int node) {
+        boolean start = node == 0; // TODO support nodes in the middle of the way.
+        return getPlacementAt(start, false) - getPlacementDistance(start, otherPlacement, false);
     }
 
     private double getPlacementDistance(boolean start, String placement, boolean ignoreWidthTags) {
@@ -428,7 +400,7 @@ public class MarkedRoadRenderer extends RoadRenderer {
         }
     }
 
-    private String getPlacementTag(boolean start) {
+    public String getPlacementTag(boolean start) {
         String output = null;
         if (start && _way.hasTag("placement:start") && Utils.isOneway(_way)) {
             output = _way.get("placement:start") + "f";
@@ -570,6 +542,27 @@ public class MarkedRoadRenderer extends RoadRenderer {
         return Utils.getParallel(alignmentPart != null ? alignmentPart : _alignment, startOffset, endOffset, false,
                 (startPoints.get(segment) < 0.1 || alignmentPart == null) ? otherStartAngle : Double.NaN,
                 (endPoints.get(segment) > getAlignment().getLength()-0.1 || alignmentPart == null) ? otherEndAngle : Double.NaN);
+    }
+
+    public Pair<Integer, Integer> calculateLaneNumber(int directedLane, boolean isForward) {
+        if (directedLane == 0) return new Pair<>(1, 0);
+        int wayDir = isForward ? 1 : -1;
+        Pair<Integer, Integer> output = new Pair<>(Math.abs(directedLane), wayDir * Integer.signum(directedLane));
+
+        if (!Utils.isRightHand(_way)) {
+            // OSM "left-to-right" lane numbering is outside-in on left hand drive roads.
+            output.a = getLaneCount(output.b) - output.a + 1;
+        }
+        return output;
+    }
+
+    public int calculateDirectedLane(int laneNumber, boolean isForward) {
+        int dir = isForward ? 1 : -1;
+        if (!Utils.isRightHand(_way)) {
+            // OSM "left-to-right" lane numbering is outside-in on left hand drive roads.
+            laneNumber = getLaneCount(dir) - laneNumber + 1;
+        }
+        return laneNumber * dir;
     }
 
     // </editor-fold>
