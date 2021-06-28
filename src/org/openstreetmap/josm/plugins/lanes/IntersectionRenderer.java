@@ -3,12 +3,10 @@ package org.openstreetmap.josm.plugins.lanes;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
-import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.Pair;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +27,7 @@ public abstract class IntersectionRenderer {
     protected List<Way> _rightBackbones;
     protected List<Way> _leftBackbones;
     protected List<Way> _crossSections;
+    protected List<Way> _betterCrossSections;
 
     protected List<WayVector> _toBeTrimmed;
     protected boolean _trimWays;
@@ -64,6 +63,7 @@ public abstract class IntersectionRenderer {
         _leftBackbones = new ArrayList<>();
         _rightBackbones = new ArrayList<>();
         _crossSections = new ArrayList<>();
+        _betterCrossSections = new ArrayList<>();
 
         _rightPoints = new ArrayList<>();
         _leftPoints = new ArrayList<>();
@@ -176,6 +176,7 @@ public abstract class IntersectionRenderer {
             crossSectionNodes.add(rightSideSetBack.getNode(rightSideSetBack.getNodesCount()-1));
             crossSectionNodes.add(leftSideSetBack.getNode(leftSideSetBack.getNodesCount()-1));
             crossSection.setNodes(crossSectionNodes);
+            _crossSections.add(crossSection);
 
             // Find intersect between the cross section and the alignment to find out how far into the alignment the cross sections go.
             double[] distances = new double[2];
@@ -214,6 +215,7 @@ public abstract class IntersectionRenderer {
             betterCSNodes.add(new Node(right));
 
             betterCrossSection.setNodes(betterCSNodes);
+            _betterCrossSections.add(betterCrossSection);
 
             // Trim backbones to where they intersect the improved cross section.
             Way rightBackbone = _rightBackbones.get(i);
