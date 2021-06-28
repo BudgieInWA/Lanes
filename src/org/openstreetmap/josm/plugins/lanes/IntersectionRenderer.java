@@ -447,14 +447,16 @@ public abstract class IntersectionRenderer {
                 } catch (Exception ignored) {}
             }
 
+            debugDrawPoints(g, _bruh, Color.RED);
 
-        g.setStroke(new BasicStroke(10));
-        g.setColor(Color.RED);
-        for (int i = 0; i < _bruh.size(); i++) {
-            int x = (int) (_mv.getPoint(_bruh.get(i)).getX() + 0.5);
-            int y = (int) (_mv.getPoint(_bruh.get(i)).getY() + 0.5);
-            g.drawLine(x, y, x, y);
-        }
+//            debugDrawPoints(g, _leftPoints, Color.PINK);
+//            debugDrawPoints(g, _rightPoints, Color.ORANGE);
+
+//            debugDrawPoints(g, _intersects, Color.BLACK);
+
+//            debugDrawWays(g, _setBacks, Color.YELLOW);
+//            debugDrawWays(g, _crossSections, Color.CYAN);
+//            debugDrawWays(g, _betterCrossSections, Color.BLUE);
 
 //            if (_ordering != null) {
 //                g.setColor(Color.RED);
@@ -477,6 +479,33 @@ public abstract class IntersectionRenderer {
             g.setStroke(GuiHelper.getCustomizedStroke("0"));
         } catch (Exception ignored) {}
     }
+
+    private void debugDrawPoints(Graphics2D g, List<LatLon> points, Color c) {
+        g.setStroke(new BasicStroke(10));
+        g.setColor(c);
+        for (int i = 0; i < points.size(); i++) {
+            int x = (int) (_mv.getPoint(points.get(i)).getX() + 0.5);
+            int y = (int) (_mv.getPoint(points.get(i)).getY() + 0.5);
+            g.drawLine(x, y, x, y);
+        }
+    }
+
+    private void debugDrawWays(Graphics2D g, List<Way> ways, Color c) {
+        g.setColor(c);
+        for (Way w : ways) {
+            g.setStroke(new BasicStroke(4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            int[] xPoints = new int[w.getNodesCount()];
+            int[] yPoints = new int[w.getNodesCount()];
+            for (int i = 0; i < w.getNodesCount(); i++) {
+                xPoints[i] = (int) (_mv.getPoint(w.getNode(i).getCoor()).getX() + 0.5);
+                yPoints[i] = (int) (_mv.getPoint(w.getNode(i).getCoor()).getY() + 0.5);
+                g.drawLine(xPoints[i], yPoints[i], xPoints[i], yPoints[i]);
+            }
+            g.setStroke(new BasicStroke(2));
+            g.drawPolyline(xPoints, yPoints, w.getNodesCount());
+        }
+    }
+
 
     public void updateAlignment() {
         // One of the child way's tags was just changed.  Update shape:
