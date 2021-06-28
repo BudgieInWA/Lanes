@@ -171,6 +171,17 @@ class RoadSplit extends NodeConnectivity {
         innerLaneToConnectedLane.put(innermostMainRoadDirectedLane, new LaneRef(connectedRoadOutward, connectedRoadOutward.isForward() ? 1 : -1));
     }
 
+    public Pair<LaneRef, LaneRef> getWayConnection(WayVector wayVec) {
+        for (int mainLane : innerLaneToConnectedLane.keySet()) {
+            LaneRef connectedLane = innerLaneToConnectedLane.get(mainLane);
+            if (connectedLane.wayVec.equals(wayVec)) {
+                //TODO fix when !mainRoad.isForward()
+                return new Pair<>(new LaneRef(mainRoad,  mainLane), connectedLane);
+            }
+        }
+        return null;
+    }
+
     @Override
     public List<LaneRef> getConnections(LaneRef laneRef) {
         if (laneRef.wayVec.equals(mainRoad)) {

@@ -9,6 +9,7 @@ import org.openstreetmap.josm.tools.Pair;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class IntersectionRenderer {
@@ -28,6 +29,7 @@ public abstract class IntersectionRenderer {
     protected List<Way> _leftBackbones;
     protected List<Way> _crossSections;
     protected List<Way> _betterCrossSections;
+    protected List<Way> _connectionWays = new ArrayList<>();
 
     protected List<WayVector> _toBeTrimmed;
     protected boolean _trimWays;
@@ -64,6 +66,7 @@ public abstract class IntersectionRenderer {
         _rightBackbones = new ArrayList<>();
         _crossSections = new ArrayList<>();
         _betterCrossSections = new ArrayList<>();
+        ArrayList<Pair<Double, Double>> setbackRanges = new ArrayList<>();
 
         _rightPoints = new ArrayList<>();
         _leftPoints = new ArrayList<>();
@@ -200,6 +203,12 @@ public abstract class IntersectionRenderer {
                 if (distances[0] > alignment.getLength()) distances[0] = alignment.getLength();
                 l = Utils.getParallelPoint(alignment, distances[0], 0);
             }
+
+            // Store the setback range.
+            double dist = distances[0] + (_wayVectors.get(i).isForward() ? -1 : 1) * (rightSideSetBack.getLength()+leftSideSetBack.getLength())/2;
+            if (dist < 0) dist = 0;
+            setbackRanges.add(new Pair<>(distances[0], dist));
+
             // Replace final nodes of the setBacks with properly parallel nodes and add gap to RoadRenderer
             // Get a "better" crossSection, which is always perpendicular to the way.
             double percent = distances[0] / alignment.getLength();
@@ -268,6 +277,51 @@ public abstract class IntersectionRenderer {
             _setBacks.add(leftSideSetBack);
             _setBacks.add(rightSideSetBack);
         }
+
+        // Create ways for each lane connectivity through the "intersection".
+        Connectivity con = getConnectivity();
+        if (con instanceof RoadSplit) {
+            try {
+                RoadSplit div = (RoadSplit) con;
+                Way mainSetback = null;
+                for (int i = 0; i < _wayVectors.size(); i++) {
+                    if (div.mainRoad.getParent().getUniqueId() == _wayVectors.get(i).getParent().getUniqueId()) {
+                        double a = setbackRanges.get(i).a;
+                        double b = setbackRanges.get(i).b;
+                        if (a < b) {
+                            mainSetback = Utils.getSubPart(_wayVectors.get(i).getParent(), a, b);
+                        } else {
+                            mainSetback = Utils.getSubPart(_wayVectors.get(i).getParent(), b, a);
+                        }
+                    }
+                }
+
+                if (mainSetback != null) {
+                    // Connect each other road up to the main road through their setbacks.
+                    for (int i = 0; i < _wayVectors.size(); i++) {
+                        if (div.mainRoad.equals(_wayVectors.get(i))) continue;
+                        Pair<LaneRef, LaneRef> lanes = div.getWayConnection(_wayVectors.get(i));
+                        if (lanes != null) {
+                            Way connectedSetback = Utils.getSubPart(_wayVectors.get(i).getParent(), setbackRanges.get(i).a, setbackRanges.get(i).b);
+                            // TODO why does getSubPart give nodes off the way sometimes?
+                            double offset = div.getPlacementOffset(_wayVectors.get(i), _m);
+                            Way mainOffsetSetback = Utils.getParallel(mainSetback, offset, offset, false, Double.NaN, Double.NaN);
+                            // TODO if connectedSetback turns away from mainSetback (so that it makes a kink) use a straight
+                            // line extension of connectedSetback instead (of the same distance)
+                            List<Node> nodes = connectedSetback.getNodes();
+                            List<Node> mainNodes = mainOffsetSetback.getNodes();
+                            if (div.mainRoad.isForward()) Collections.reverse(mainNodes);
+                            nodes.addAll(mainNodes);
+                            connectedSetback.setNodes(nodes);
+                            _connectionWays.add(connectedSetback);
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+                _connectionWays = null;
+            }
+        }
+
 
         // Revisit every corner and add its bezier curve to the outline.
         List<Node> outlineNodes = new ArrayList<>();
@@ -410,43 +464,8 @@ public abstract class IntersectionRenderer {
 
 
             // DRAW CONNECTIVITY
-            Connectivity con = getConnectivity();
-            if (con instanceof RoadSplit) {
-                try {
-                    RoadSplit div = (RoadSplit) con;
-                    int x = (int) (_mv.getPoint(div._node).getX() + 0.5);
-                    int y = (int) (_mv.getPoint(div._node).getY() + 0.5);
-                    g.setStroke(new BasicStroke(10));
-                    g.setColor(Color.GREEN);
-                    g.drawLine(x, y, x, y);
-
-                    double offsetAngle = _m.wayIdToRSR.get(div.mainRoad.getParent().getUniqueId()).getThisAngle(!div.mainRoad.isForward());
-                    offsetAngle += (div.mainRoad.isForward() ? 1 : -1) * Math.PI / 2;
-
-                    for (LaneRef connectedLane: div.innerLaneToConnectedLane.values()) {
-                        LaneRef mainRoadLaneRef = div.getConnections(connectedLane).get(0);
-                        RoadRenderer connectedRoad = _m.wayIdToRSR.get(connectedLane.wayVec.getParent().getUniqueId());
-
-                        double offset = 0.0;
-                        if (connectedRoad instanceof MarkedRoadRenderer) {
-                            offset = div.getPlacementOffset(connectedLane.wayVec, _m);
-                        }
-                        Point from = _mv.getPoint(Utils.getLatLonRelative(div._node.getCoor(), offsetAngle, offset));
-                        int fromX = (int) (from.getX() + 0.5);
-                        int fromY = (int) (from.getY() + 0.5);
-
-                        Node toNode = connectedRoad._way.getNode(connectedLane.wayVec.getFrom() + (connectedLane.wayVec.isForward() ? 1 : - 1));
-                        int toX = (int) (_mv.getPoint(toNode).getX() + 0.5);
-                        int toY = (int) (_mv.getPoint(toNode).getY() + 0.5);
-
-                        g.setStroke(new BasicStroke(5));
-                        g.setColor(Color.GREEN);
-                        g.drawLine(fromX, fromY, toX, toY);
-                        g.setColor(Color.CYAN);
-                        g.drawString((mainRoadLaneRef.directedLane >= 0 ? "+" : "") + mainRoadLaneRef.directedLane, fromX + 10, fromY + 10);
-                        g.drawString((connectedLane.directedLane >= 0 ? "+" : "") + connectedLane.directedLane, toX + 10, toY + 10);
-                    }
-                } catch (Exception ignored) {}
+            if (_connectionWays != null) {
+                debugDrawWays(g, _connectionWays, Color.GREEN);
             }
 
             debugDrawPoints(g, _bruh, Color.RED);
