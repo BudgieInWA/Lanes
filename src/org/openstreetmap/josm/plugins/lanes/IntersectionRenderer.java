@@ -29,7 +29,8 @@ public abstract class IntersectionRenderer {
     protected List<Way> _leftBackbones;
     protected List<Way> _crossSections;
     protected List<Way> _betterCrossSections;
-    protected List<Way> _connectionWays = new ArrayList<>();
+    protected List<Way> _connectionWays;
+    protected List<MarkedRoadRenderer> _connectionRoads;
 
     protected List<WayVector> _toBeTrimmed;
     protected boolean _trimWays;
@@ -66,6 +67,8 @@ public abstract class IntersectionRenderer {
         _rightBackbones = new ArrayList<>();
         _crossSections = new ArrayList<>();
         _betterCrossSections = new ArrayList<>();
+        _connectionWays = new ArrayList<>();
+        _connectionRoads = new ArrayList<>();
         ArrayList<Pair<Double, Double>> setbackRanges = new ArrayList<>();
 
         _rightPoints = new ArrayList<>();
@@ -312,13 +315,17 @@ public abstract class IntersectionRenderer {
                             List<Node> mainNodes = mainOffsetSetback.getNodes();
                             if (div.mainRoad.isForward()) Collections.reverse(mainNodes);
                             nodes.addAll(mainNodes);
-                            connectedSetback.setNodes(nodes);
-                            _connectionWays.add(connectedSetback);
+                            Way connectionWay = new Way(_wayVectors.get(i).getParent(), true, false);
+                            if (_wayVectors.get(i).isForward()) Collections.reverse(nodes);
+                            connectionWay.setNodes(nodes);
+                            _connectionWays.add(connectionWay);
+                            _connectionRoads.add(new MarkedRoadRenderer(connectionWay, _mv, _m));
                         }
                     }
                 }
             } catch (Exception ignored) {
                 _connectionWays = null;
+                _connectionRoads = null;
             }
         }
 
@@ -411,37 +418,45 @@ public abstract class IntersectionRenderer {
 
     public void render(Graphics2D g) {
         try {
-            // Fill in asphalt.
-            int[] xPoints = new int[_outline.getNodesCount()];
-            int[] yPoints = new int[_outline.getNodesCount()];
-            for (int i = 0; i < _outline.getNodesCount(); i++) {
-                xPoints[i] = (int) (_mv.getPoint(_outline.getNode(i).getCoor()).getX() + 0.5);
-                yPoints[i] = (int) (_mv.getPoint(_outline.getNode(i).getCoor()).getY() + 0.5);
-            }
-            g.setColor(Utils.DEFAULT_ASPHALT_COLOR);
-            g.fillPolygon(xPoints, yPoints, xPoints.length);
-
-            // Draw road lines:
-            double pixelsPerMeter = 100 / _mv.getDist100Pixel();
-            for (Way w : _roadMarkings) {
-                if (w == null) continue;
-                // To reduce jitter, ensure no more than one vertex per 10 pixels or so. TODO use better simplification
-                int everyNth = Math.max((int) (w.getNodesCount() / (Math.max(w.getLength() * pixelsPerMeter / 7, 10)) + 1.5), 1);
-                xPoints = new int[w.getNodesCount()];
-                yPoints = new int[w.getNodesCount()];
-                int num = 0;
-                int topLefts = 0;
-                for (int i = 0; i < w.getNodesCount(); i++) {
-                    if (i % everyNth != 0 && i != w.getNodesCount() - 1) continue;
-                    xPoints[num] = (int) (_mv.getPoint(w.getNode(i).getCoor()).getX() + 0.5);
-                    yPoints[num] = (int) (_mv.getPoint(w.getNode(i).getCoor()).getY() + 0.5);
-                    if (xPoints[num] == 0 && yPoints[num] == 0) topLefts++;
-                    num++;
+            if (_connectionRoads != null && _connectionRoads.size() > 0) {
+                for (MarkedRoadRenderer r : _connectionRoads) {
+                   r.render(g);
                 }
-                g.setColor(Utils.DEFAULT_UNTAGGED_ROADEDGE_COLOR);
-                g.setStroke(GuiHelper.getCustomizedStroke((12.5 / _mv.getDist100Pixel() + 1) + ""));
-                if (topLefts < 2)
-                    g.drawPolyline(xPoints, yPoints, num); // Render road line unless it would shoot to the top left point of the screen.
+            }
+            else {
+
+                // Fill in asphalt.
+                int[] xPoints = new int[_outline.getNodesCount()];
+                int[] yPoints = new int[_outline.getNodesCount()];
+                for (int i = 0; i < _outline.getNodesCount(); i++) {
+                    xPoints[i] = (int) (_mv.getPoint(_outline.getNode(i).getCoor()).getX() + 0.5);
+                    yPoints[i] = (int) (_mv.getPoint(_outline.getNode(i).getCoor()).getY() + 0.5);
+                }
+                g.setColor(Utils.DEFAULT_ASPHALT_COLOR);
+                g.fillPolygon(xPoints, yPoints, xPoints.length);
+
+                // Draw road lines:
+                double pixelsPerMeter = 100 / _mv.getDist100Pixel();
+                for (Way w : _roadMarkings) {
+                    if (w == null) continue;
+                    // To reduce jitter, ensure no more than one vertex per 10 pixels or so. TODO use better simplification
+                    int everyNth = Math.max((int) (w.getNodesCount() / (Math.max(w.getLength() * pixelsPerMeter / 7, 10)) + 1.5), 1);
+                    xPoints = new int[w.getNodesCount()];
+                    yPoints = new int[w.getNodesCount()];
+                    int num = 0;
+                    int topLefts = 0;
+                    for (int i = 0; i < w.getNodesCount(); i++) {
+                        if (i % everyNth != 0 && i != w.getNodesCount() - 1) continue;
+                        xPoints[num] = (int) (_mv.getPoint(w.getNode(i).getCoor()).getX() + 0.5);
+                        yPoints[num] = (int) (_mv.getPoint(w.getNode(i).getCoor()).getY() + 0.5);
+                        if (xPoints[num] == 0 && yPoints[num] == 0) topLefts++;
+                        num++;
+                    }
+                    g.setColor(Utils.DEFAULT_UNTAGGED_ROADEDGE_COLOR);
+                    g.setStroke(GuiHelper.getCustomizedStroke((12.5 / _mv.getDist100Pixel() + 1) + ""));
+                    if (topLefts < 2)
+                        g.drawPolyline(xPoints, yPoints, num); // Render road line unless it would shoot to the top left point of the screen.
+                }
             }
 
             g.setStroke(new BasicStroke(10));
