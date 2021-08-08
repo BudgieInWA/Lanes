@@ -84,14 +84,14 @@ abstract class NodeConnectivity implements Connectivity {
                 return output;
             }
 
-            // TODO same thing but with two way roads.
+            // Same thing but with two way roads.
             if (inOutWays.size() == 1) {
                 int mainI = inOutWays.get(0);
                 WayVector mainWv = wayVectors.get(mainI).reverse();
                 MarkedRoadRenderer mrr = (MarkedRoadRenderer) m.wayIdToRSR.get(mainWv.getParent().getUniqueId());
 
-                if (mrr.getLaneCount(mainWv.isForward() ? 1 : -1) != inLanes ||
-                        mrr.getLaneCount(mainWv.isForward() ? -1 : 1) != outLanes) {
+                if (mrr.getLaneCount(mainWv.isForward() ? 1 : -1) != outLanes ||
+                        mrr.getLaneCount(mainWv.isForward() ? -1 : 1) != inLanes) {
                     return null; // TODO support this case, because it is easy to allocate lanes starting at the center line.
                 }
 
