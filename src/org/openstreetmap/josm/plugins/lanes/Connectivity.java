@@ -113,7 +113,7 @@ abstract class NodeConnectivity implements Connectivity {
                         // Allocating lanes outside in.
                         int lane = lanesAllocated + 1;
                         lane = leftHandLanes - lane + 1 - connectedLanes + 1;
-                        output.addConnectedWay(connectedWv, lane * (output.mainRoad.isForward() ? 1 : -1));
+                        output.addConnectedWay(connectedWv, lane * (isRightHand ? -1 : 1));
                         lanesAllocated += connectedLanes;
 
                         if (connectedMrr.getLaneCount(-1 * connectedLaneDir) > 0) {
@@ -128,7 +128,7 @@ abstract class NodeConnectivity implements Connectivity {
 
                         // Allocate lanes inside out.
                         int lane = lanesAllocated - leftHandLanes + 1;
-                        output.addConnectedWay(connectedWv, lane * (output.mainRoad.isForward() ? -1 : 1));
+                        output.addConnectedWay(connectedWv, lane * (isRightHand ? 1 : -1));
                         lanesAllocated += connectedLanes;
 
                         if (connectedMrr.getLaneCount(-1 * connectedLaneDir) > 0) {
@@ -198,8 +198,7 @@ class RoadSplit extends NodeConnectivity {
         else for (int mainLane : innerLaneToConnectedLane.keySet()) {
             LaneRef connected = innerLaneToConnectedLane.get(mainLane);
             if (connected.wayVec.equals(laneRef.wayVec)) {
-                //TODO fix when !mainRoad.isForward()
-                return Collections.singletonList(new LaneRef(mainRoad,  mainLane + laneRef.directedLane - connected.directedLane));
+                return Collections.singletonList(new LaneRef(mainRoad,  mainLane + (laneRef.directedLane - connected.directedLane)));
             }
         }
 
@@ -225,6 +224,7 @@ class RoadSplit extends NodeConnectivity {
                 // TODO fix for right hand drive ways
                 int lanes = connectedRoad.getLaneCount(1);
                 placement = (lanes % 2 == 1) ? "middle_of:" + (lanes / 2 + 1) + "f" : "right_of:" + (lanes / 2) + "f";
+                // FIXME placement is actually in the center of the road, (which is not here if the lane widths differ).
             }
             String[] placementBits = placement.substring(0, placement.length() - 1).split(":");
             int directedPlacementLane = connectedRoad.calculateDirectedLane(
