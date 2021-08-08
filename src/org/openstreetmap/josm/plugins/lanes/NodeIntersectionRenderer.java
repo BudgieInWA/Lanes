@@ -4,10 +4,7 @@ import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.MapView;
-import org.openstreetmap.josm.gui.util.GuiHelper;
 
-import java.awt.*;
-import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,13 +18,13 @@ import java.util.List;
 public class NodeIntersectionRenderer extends IntersectionRenderer {
 
     private Node _node;
-    protected NodeConnectivity _connectivity;
+    protected RightOfWay _rightOfWay;
 
     public NodeIntersectionRenderer(Node n, MapView mv, LaneMappingMode m) {
         super(mv, m);
         _node = n;
         _trimWays = false; // Only multi intersections do this.
-        _connectivity = NodeConnectivity.create(n, m);
+        _rightOfWay = RightOfWay.create(n, m);
         createIntersectionLayout();
     }
 
@@ -49,8 +46,8 @@ public class NodeIntersectionRenderer extends IntersectionRenderer {
     }
 
     @Override
-    public Connectivity getConnectivity() {
-        return _connectivity;
+    public RightOfWay getRightOfWay() {
+        return _rightOfWay;
     }
 
     public Way getOutline() {

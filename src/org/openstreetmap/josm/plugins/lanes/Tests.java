@@ -1,6 +1,5 @@
 package org.openstreetmap.josm.plugins.lanes;
 
-import com.kitfox.svg.A;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
@@ -103,14 +102,14 @@ public class Tests {
 
         // TODO can't do this without the nodes being a part of the dataset :(
         new NodeIntersectionRenderer(intersectionNode, mv, m);
-        RoadSplit con = (RoadSplit) NodeConnectivity.create(intersectionNode, m);
-        expectEqual("the calculated main road", con.mainRoad, new WayVector(0, 1, mainWay));
+        RightOfWay row = RightOfWay.create(intersectionNode, m);
+        expectEqual("the calculated main road", row.mainRoad, new WayVector(0, 1, mainWay));
 
         expectEqual("inner lane continues to cont lane",
-                con.innerLaneToConnectedLane.getOrDefault(1, null),
+                row.innerLaneToConnectedLane.getOrDefault(1, null),
                 new LaneRef(new WayVector(0, 1, contLaneWay), 1));
         expectEqual("outer lane joins exit lane",
-                con.innerLaneToConnectedLane.getOrDefault(3, null),
+                row.innerLaneToConnectedLane.getOrDefault(3, null),
                 new LaneRef(new WayVector(0, 1, exitLaneWay), 1));
     }
 

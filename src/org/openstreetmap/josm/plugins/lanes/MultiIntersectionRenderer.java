@@ -3,11 +3,7 @@ package org.openstreetmap.josm.plugins.lanes;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
-import org.openstreetmap.josm.gui.MainApplication;
-import org.openstreetmap.josm.gui.MapView;
 
-import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -20,7 +16,7 @@ public class MultiIntersectionRenderer extends IntersectionRenderer {
     private List<NodeIntersectionRenderer> _space;
     private List<Long> _nodeIds;
     private LatLon _pos;
-    private Connectivity _connectivity;
+    private RightOfWay _rightOfWay;
 
     public MultiIntersectionRenderer(List<NodeIntersectionRenderer> nodeOnlyIntersections, List<IntersectionRenderer> addToThis) {
         super(nodeOnlyIntersections.get(0)._mv, nodeOnlyIntersections.get(0)._m);
@@ -29,7 +25,7 @@ public class MultiIntersectionRenderer extends IntersectionRenderer {
         _vertextOrdering = new ArrayList<>();
 
         if (nodeOnlyIntersections.size() == 1) {
-            _connectivity = nodeOnlyIntersections.get(0).getConnectivity();
+            _rightOfWay = nodeOnlyIntersections.get(0).getRightOfWay();
         } else {
             // TODO combine connectivities.
         }
@@ -197,8 +193,8 @@ public class MultiIntersectionRenderer extends IntersectionRenderer {
     }
 
     @Override
-    Connectivity getConnectivity() {
-        return _connectivity;
+    RightOfWay getRightOfWay() {
+        return _rightOfWay;
     }
 
     public List<NodeIntersectionRenderer> getNodeOnlyIntersections() {

@@ -282,13 +282,12 @@ public abstract class IntersectionRenderer {
         }
 
         // Create ways for each lane connectivity through the "intersection".
-        Connectivity con = getConnectivity();
-        if (con instanceof RoadSplit) {
+        RightOfWay row = getRightOfWay();
+        if (row != null) {
             try {
-                RoadSplit div = (RoadSplit) con;
                 Way mainSetback = null;
                 for (int i = 0; i < _wayVectors.size(); i++) {
-                    if (div.mainRoad.getParent().getUniqueId() == _wayVectors.get(i).getParent().getUniqueId()) {
+                    if (row.mainRoad.getParent().getUniqueId() == _wayVectors.get(i).getParent().getUniqueId()) {
                         double a = setbackRanges.get(i).a;
                         double b = setbackRanges.get(i).b;
                         if (a < b) {
@@ -302,18 +301,18 @@ public abstract class IntersectionRenderer {
                 if (mainSetback != null) {
                     // Connect each other road up to the main road through their setbacks.
                     for (int i = 0; i < _wayVectors.size(); i++) {
-                        if (div.mainRoad.equals(_wayVectors.get(i))) continue;
-                        Pair<LaneRef, LaneRef> lanes = div.getWayConnection(_wayVectors.get(i));
+                        if (row.mainRoad.equals(_wayVectors.get(i))) continue;
+                        Pair<LaneRef, LaneRef> lanes = row.getWayConnection(_wayVectors.get(i));
                         if (lanes != null) {
                             Way connectedSetback = Utils.getSubPart(_wayVectors.get(i).getParent(), setbackRanges.get(i).a, setbackRanges.get(i).b);
                             // TODO why does getSubPart give nodes off the way sometimes?
-                            double offset = div.getPlacementOffset(_wayVectors.get(i), _m);
+                            double offset = row.getPlacementOffset(_wayVectors.get(i), _m);
                             Way mainOffsetSetback = Utils.getParallel(mainSetback, offset, offset, false, Double.NaN, Double.NaN);
                             // TODO if connectedSetback turns away from mainSetback (so that it makes a kink) use a straight
                             // line extension of connectedSetback instead (of the same distance)
                             List<Node> nodes = connectedSetback.getNodes();
                             List<Node> mainNodes = mainOffsetSetback.getNodes();
-                            if (div.mainRoad.isForward()) Collections.reverse(mainNodes);
+                            if (row.mainRoad.isForward()) Collections.reverse(mainNodes);
                             nodes.addAll(mainNodes);
                             Way connectionWay = new Way(_wayVectors.get(i).getParent(), true, false);
                             if (_wayVectors.get(i).isForward()) Collections.reverse(nodes);
@@ -578,7 +577,7 @@ public abstract class IntersectionRenderer {
 
     abstract LatLon getPos();
 
-    abstract Connectivity getConnectivity();
+    abstract RightOfWay getRightOfWay();
 
     public Way glue(Way a, Way b, double extension) {
         // Glue first half of a to second half of b.  Split into halves at intersect.
