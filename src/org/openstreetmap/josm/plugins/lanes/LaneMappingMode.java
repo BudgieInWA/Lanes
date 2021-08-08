@@ -54,6 +54,8 @@ public class LaneMappingMode extends MapMode implements MouseListener, MouseMoti
     public Map<Long, IntersectionRenderer> nodeIdToISR = new HashMap<>();
     private int mapChangeTolerance = 0; // Other objects can increase this by X to make it ignore the next X times the dataset changes.
 
+    private static boolean _testsRun = false;
+
     public LaneMappingMode() {
         super(tr("Lane Editing"), "laneconnectivity.png", tr("Activate lane editing mode"),
                 Shortcut.registerShortcut("mapmode:lanemapping", tr("Mode: {0}",
@@ -74,6 +76,12 @@ public class LaneMappingMode extends MapMode implements MouseListener, MouseMoti
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         double cushion = 200;
         _mv = mv;
+
+        if (!_testsRun) {
+            new Tests(_mv, this, true).run();
+            new Tests(_mv, this, false).run();
+            _testsRun = true;
+        }
 
         // Get map data for rendering:
         ensureRoadSegmentsNotNull();
